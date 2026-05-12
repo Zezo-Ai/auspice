@@ -24,6 +24,7 @@ import { hasMultipleGridPanels } from "./panelDisplay";
 import { strainSymbolUrlString } from "../middleware/changeURL";
 import { combineMeasurementsControlsAndQuery, encodeMeasurementColorBy, loadMeasurements } from "./measurements";
 import { processStreams, labelStreamMembership, availableStreamLabelKeys } from "../util/treeStreams";
+import { computeMetadataSharing } from "../util/metadataJsonParsing";
 
 export const doesColorByHaveConfidence = (controlsState, colorBy) =>
   controlsState.coloringsPresentOnTreeWithConfidence.has(colorBy);
@@ -898,6 +899,7 @@ const createMetadataStateFromJSON = (json) => {
     metadata.geoResolutions = json.meta.geo_resolutions;
   }
 
+  metadata.sharing = computeMetadataSharing(metadata, json.meta?.sharing)
 
   if (Object.prototype.hasOwnProperty.call(metadata, "loaded")) {
     console.error("Metadata JSON must not contain the key \"loaded\". Ignoring.");

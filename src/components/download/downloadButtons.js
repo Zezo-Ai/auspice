@@ -25,12 +25,12 @@ export const DownloadButtons = ({dispatch, t, tree, entropy, metadata, colorBy, 
   const filePrefix = getFilePrefix();
   const temporal = distanceMeasure === "num_date";
 
-  /* set gisaidProvenance based on supplied JSON metadata */
-  const gisaidProvenance = (metadata?.dataProvenance || []).filter((el) => el.name.toUpperCase()==='GISAID').length>0;
-  /* Verify that we can parse dataset name from URL to support Auspice JSON download */
+  /**
+   * Currently our ability to download JSONs relies on parsing the URL and re-fetching the
+   * JSON. Check that we can parse datasets from the URL before exposing the button here.
+   * This check will be removed as part of <https://github.com/nextstrain/auspice/issues/2000>
+   */
   const datasetNames = getDatasetNamesFromUrl(window.location.pathname);
-  const supportAuspiceJsonDownload = !gisaidProvenance && datasetNames.some(Boolean);
-
   const entropyBar = entropy?.selectedCds===nucleotide_gene ? "nucleotide" : "codon";
 
   return (
@@ -44,7 +44,7 @@ export const DownloadButtons = ({dispatch, t, tree, entropy, metadata, colorBy, 
         <p/>
         {partialData ? `Currently ${selectedTipsCount}/${totalTipCount} tips are displayed and will be downloaded.` : `Currently the entire dataset (${totalTipCount} tips) will be downloaded.`}
       </div>
-      {supportAuspiceJsonDownload && (
+      {metadata.sharing.dataset_json && datasetNames.some(Boolean) && (
         <Button
           name="Auspice (Nextstrain) JSON"
           description={`The main Auspice dataset JSON(s) for the current view`}
@@ -52,33 +52,39 @@ export const DownloadButtons = ({dispatch, t, tree, entropy, metadata, colorBy, 
           onClick={() => helpers.auspiceJSON(dispatch, datasetNames)}
         />
       )}
-      <Button
-        name={`${temporal ? 'TimeTree' : 'Tree'} (Newick)`}
-        description={`Phylogenetic tree in Newick format with branch lengths in units of ${temporal?'years':'divergence'}.`}
-        icon={<RectangularTreeIcon width={iconWidth} selected />}
-        onClick={() => helpers.exportTree({isNewick: true, dispatch, filePrefix, tree, temporal})}
-      />
-      <Button
-        name={`${temporal ? 'TimeTree' : 'Tree'} (Nexus)`}
-        description={`Phylogeny in Nexus format with branch lengths in units of ${temporal?'years':'divergence'}. Colorings are included as annotations.`}
-        icon={<RectangularTreeIcon width={iconWidth} selected />}
-        onClick={() => helpers.exportTree({dispatch, filePrefix, tree, colorings: metadata.colorings, colorBy, temporal})}
-      />
-      {gisaidProvenance ?
+      {metadata.sharing.trees && (
+        <>
+          <Button
+            name={`${temporal ? 'TimeTree' : 'Tree'} (Newick)`}
+            description={`Phylogenetic tree in Newick format with branch lengths in units of ${temporal ? 'years' : 'divergence'}.`}
+            icon={<RectangularTreeIcon width={iconWidth} selected />}
+            onClick={() => helpers.exportTree({ isNewick: true, dispatch, filePrefix, tree, temporal })}
+          />
+          <Button
+            name={`${temporal ? 'TimeTree' : 'Tree'} (Nexus)`}
+            description={`Phylogeny in Nexus format with branch lengths in units of ${temporal?'years':'divergence'}. Colorings are included as annotations.`}
+            icon={<RectangularTreeIcon width={iconWidth} selected />}
+            onClick={() => helpers.exportTree({dispatch, filePrefix, tree, colorings: metadata.colorings, colorBy, temporal})}
+          />
+        </>
+      )}
+      {metadata.sharing.gisaid_acknowledgments && (
         <Button
           name="Acknowledgments (TSV)"
           description={`Per-sample acknowledgments (n = ${selectedTipsCount}).`}
           icon={<MetaIcon width={iconWidth} selected />}
           onClick={() => helpers.acknowledgmentsTSV(dispatch, filePrefix, tree.nodes, tree.visibility)}
-        /> :
+        />
+      )}
+      {metadata.sharing.metadata_tsv && (
         <Button
           name="Metadata (TSV)"
           description={`Per-sample metadata (n = ${selectedTipsCount}).`}
           icon={<MetaIcon width={iconWidth} selected />}
           onClick={() => helpers.strainTSV(dispatch, filePrefix, tree.nodes, tree.visibility)}
         />
-      }
-      {helpers.areAuthorsPresent(tree) && (
+      )}
+      {metadata.sharing.authors && helpers.areAuthorsPresent(tree) && (
         <Button
           name="Author Metadata (TSV)"
           description={`Metadata for ${selectedTipsCount} samples grouped by their ${getNumUniqueAuthors(tree.nodes, tree.visibility)} authors.`}
@@ -86,7 +92,7 @@ export const DownloadButtons = ({dispatch, t, tree, entropy, metadata, colorBy, 
           onClick={() => helpers.authorTSV(dispatch, filePrefix, tree)}
         />
       )}
-      {entropy.loaded && (
+      {metadata.sharing.entropy && entropy.loaded && (
         <Button
           name="Genetic diversity data (TSV)"
           description={`The data behind the diversity panel showing ${entropy.showCounts?`a count of changes across the tree`:`normalised shannon entropy`} per ${entropyBar}.`}
@@ -94,22 +100,24 @@ export const DownloadButtons = ({dispatch, t, tree, entropy, metadata, colorBy, 
           onClick={() => helpers.entropyTSV(dispatch, filePrefix, entropy)}
         />
       )}
-      <Button
-        name="Screenshot (SVG)"
-        description="Screenshot of the current nextstrain display in SVG format; CC-BY licensed."
-        icon={<PanelsGridIcon width={iconWidth} selected />}
-        onClick={() => helpers.SVG(
-          dispatch,
-          t,
-          metadata,
-          tree.nodes,
-          visibility,
-          getFilePrefix(),
-          panelsToDisplay,
-          panelLayout,
-          relevantPublications
-        )}
-      />
+      {metadata.sharing.screenshot && (
+        <Button
+          name="Screenshot (SVG)"
+          description="Screenshot of the current nextstrain display in SVG format; CC-BY licensed."
+          icon={<PanelsGridIcon width={iconWidth} selected />}
+          onClick={() => helpers.SVG(
+            dispatch,
+            t,
+            metadata,
+            tree.nodes,
+            visibility,
+            getFilePrefix(),
+            panelsToDisplay,
+            panelLayout,
+            relevantPublications
+          )}
+        />
+      )}
     </>
   );
 };
