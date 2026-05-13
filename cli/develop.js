@@ -52,7 +52,7 @@ const run = (args) => {
 
   /* Redirects / to webpack-generated index */
   app.use((req, res, next) => {
-    if (!/^\/__webpack_hmr|^\/charon|\.[A-Za-z0-9]{1,4}$/.test(req.path)) {
+    if (!/^\/__webpack_hmr|^\/charon|\.[A-Za-z0-9]{1,5}$/.test(req.path)) {
       req.url = webpackConfig.output.publicPath;
     }
     next();
