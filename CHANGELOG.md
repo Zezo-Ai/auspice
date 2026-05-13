@@ -1,5 +1,8 @@
 # Changelog
 
+## version 2.70.0 - 2026/05/13
+
+
 * Expose sharing options in the dataset JSON (`.meta.sharing`) to provide fine-grained control on which assets Auspice offers for download. See [view settings docs](https://docs.nextstrain.org/projects/auspice/en/stable/advanced-functionality/view-settings.html) for more. ([#2047](https://github.com/nextstrain/auspice/pull/2047))
 
 ## version 2.69.0 - 2026/04/14
